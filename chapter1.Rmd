@@ -3,6 +3,6 @@
 
 *Introduction to Open Data Science (IODS) helps one to understand the essentials of research done with open data
 
-**https://paapekka.github.io/IODS-project/**
+**https://github.com/paapekka/IODS-project**
 *
 
