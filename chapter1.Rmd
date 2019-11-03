@@ -1,8 +1,8 @@
 
 # About the project
 
-*Introduction to Open Data Science (IODS) helps one to understand the essentials of research done with open data
+Introduction to Open Data Science (IODS) helps one to understand the essentials of research done with open data
 
 **https://github.com/paapekka/IODS-project**
-*
+
 
