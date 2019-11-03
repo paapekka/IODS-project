@@ -1,4 +1,8 @@
 
 # About the project
 
-*Write a short description about the course and add a link to your GitHub repository here. This is an R Markdown (.Rmd) file so you can use R Markdown syntax.*
+*Introduction to Open Data Science (IODS) helps one to understand the essentials of research done with open data
+
+**https://paapekka.github.io/IODS-project/**
+*
+
