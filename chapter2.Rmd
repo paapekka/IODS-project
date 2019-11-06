@@ -41,7 +41,6 @@ keep_columns <- c("gender","Age","attitude", "deep", "stra", "surf", "Points")
 learning2014 <- select(lrn14,one_of(keep_columns))
 learning2014 <- filter(learning2014, Points >0)
 str(learning2014)
-write.csv(learning2014, file = "learning2014.csv")
 
 ```
 
