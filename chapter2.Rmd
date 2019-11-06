@@ -46,6 +46,7 @@ write.csv(learning2014, file = "learning2014.csv")
 
 Finally we take a look at the dimensions and structure of the new dataset.
 
+
 ```{r, error=FALSE, warning=FALSE, message=FALSE}
 
 library(dplyr)
