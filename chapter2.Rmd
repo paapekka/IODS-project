@@ -1,7 +1,126 @@
-# Insert chapter 2 title here
+# Week 2: Regression and model validation
 
-*Describe the work you have done this week and summarize your learning.*
+## Data wrangling
 
-- Describe your work and results clearly. 
-- Assume the reader has an introductory course level understanding of writing and reading R code as well as statistical methods.
-- Assume the reader has no previous knowledge of your data or the more advanced methods you are using.
+We read the data and take a look at the dimensions and structure.
+
+```{r,error=FALSE, warning=FALSE, message=FALSE}
+
+rm(list = ls())
+library(dplyr)
+
+lrn14 <- read.table("http://www.helsinki.fi/~kvehkala/JYTmooc/JYTOPKYS3-data.txt",header = T,sep = "\t" )
+
+dim(lrn14)
+
+str(lrn14)
+
+```
+
+We have 60 columns (variables) and each column (variable) has 183 rows (observations)
+We proceed with further data wrangling to get dataset defined in the datacamp exercises
+
+```{r, error=FALSE, warning=FALSE, message=FALSE}
+deep_questions <- c("D03", "D11", "D19", "D27", "D07", "D14", "D22", "D30","D06",  "D15", "D23", "D31")
+surface_questions <- c("SU02","SU10","SU18","SU26", "SU05","SU13","SU21","SU29","SU08","SU16","SU24","SU32")
+strategic_questions <- c("ST01","ST09","ST17","ST25","ST04","ST12","ST20","ST28")
+
+deep_columns <- select(lrn14, one_of(deep_questions))
+lrn14$deep <- rowMeans(deep_columns)
+
+surface_columns <- select(lrn14, one_of(surface_questions))
+lrn14$surf <- rowMeans(surface_columns)
+
+strategic_columns <- select(lrn14, one_of(strategic_questions))
+lrn14$stra <- rowMeans(strategic_columns)
+
+lrn14$attitude <- lrn14$Attitude / 10
+
+keep_columns <- c("gender","Age","attitude", "deep", "stra", "surf", "Points")
+learning2014 <- select(lrn14,one_of(keep_columns))
+learning2014 <- filter(learning2014, Points >0)
+str(learning2014)
+write.csv(learning2014, file = "learning2014.csv")
+
+```
+
+Finally we take a look at the dimensions and structure of the new dataset.
+
+```{r, error=FALSE, warning=FALSE, message=FALSE}
+
+library(dplyr)
+library(GGally)
+library(ggplot2)
+
+dim(learning2014)
+
+str(learning2014)
+
+```
+
+We have 7 variables which have 166 observations
+The dataset includes variables for student's age and gender, attitude towards statistics, deep- , strategic- and surface learning AND exam points.
+Metatext which explains the variables can be found here [id]:http://www.helsinki.fi/~kvehkala/JYTmooc/JYTOPKYS2-meta.txt
+
+## Analysis
+
+
+Next we take a look at the graphical overview of the data. Different genders are highlighted with different colours
+
+```{r, error=FALSE, warning=FALSE, message=FALSE}
+
+p <- ggpairs(learning2014, mapping = aes(col = gender, alpha = 0.3), lower = list(combo = wrap("facethist", bins = 20)))
+p
+
+```
+
+We can see correlations between variables written in black text. For example highest correlation is between attitude and points.
+In red we have correlations for women and in blue correlations for men. We have also distributions for men and women for all the variables, we see some slight differences between genders but not anything significant. Here have summary of the data
+
+```{r, error=FALSE, warning=FALSE, message=FALSE}
+
+summary(learning2014)
+
+```
+
+We can see that we have more female participants than men (110 vs. 56).
+
+Next we choose model with three explanatory variables to exaplain exam points.
+We choose variables with biggest correlation (attitude, strategic- and surface learning)
+
+```{r, error=FALSE, warning=FALSE, message=FALSE}
+
+my_model <- lm(Points ~ attitude + stra + surf, data = learning2014)
+summary(my_model)
+
+```
+
+We can see that intercept and attitude are statistically significant at confidennce 0.001 level.
+Estimate for attitude is 3.39, which means that change in unit in attitude changes points by 3.39.
+Other variables in this model are statistically insignificant.
+Adjusted R-squared is 0,19 which means that the model explains around 19 % of variation in exam points.
+
+
+We continue to remove strategic- and surface learning variables as they were statistically insignificant.
+New model is:
+
+```{r, error=FALSE, warning=FALSE, message=FALSE}
+
+my_model2 <- lm(Points ~ attitude, data = learning2014)
+summary(my_model2)
+
+```
+
+Both the intercept and variable attitude are now statistically significant under 0,001 level.
+The estimate for attitude is slightly bigger in this second model (One unit change in attitude results to 3.52 change in exam points).
+Adjusted R-squared is now 0.1856 which means that the model explains around 18 % of the variation of points.
+
+Finally we produce diagnostics plots for Residuals vs Fitted values, Normal QQ-plot and Residuals vs Leverage.
+
+```{r, error=FALSE, warning=FALSE, message=FALSE}
+
+par(mfrow = c(2,2))
+
+plot(my_model2, which = c(1,2,5))
+
+```
