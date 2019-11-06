@@ -30,6 +30,7 @@ summary(learning2014)
 my_model <- lm(Points ~ attitude + stra + surf, data = learning2014)
 summary(my_model)
 
+
 #We can see that intercept and attitude are statistically significant at confidennce 0.001 level.
 #Estimate for attitude is 3.39, which means that change in unit in attitude changes points by 3.39
 #Other variables in this model are statistically insignificant.

@@ -17,6 +17,7 @@ str(lrn14)
 
 ```
 
+
 We have 60 columns (variables) and each column (variable) has 183 rows (observations)
 We proceed with further data wrangling to get dataset defined in the datacamp exercises
 
