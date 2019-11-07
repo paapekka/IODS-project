@@ -61,7 +61,9 @@ str(learning2014)
 
 We have 7 variables which have 166 observations
 The dataset includes variables for student's age and gender, attitude towards statistics, deep- , strategic- and surface learning AND exam points.
-Metatext which explains the variables can be found here [id]:http://www.helsinki.fi/~kvehkala/JYTmooc/JYTOPKYS2-meta.txt
+Metatext which explains the variables can be found [here][id]
+
+[id]http://www.helsinki.fi/~kvehkala/JYTmooc/JYTOPKYS2-meta.txt
 
 ## Analysis
 
