@@ -568,7 +568,7 @@ summary(my_model)</code></pre>
 ## Residual standard error: 5.296 on 162 degrees of freedom
 ## Multiple R-squared:  0.2074, Adjusted R-squared:  0.1927 
 ## F-statistic: 14.13 on 3 and 162 DF,  p-value: 3.156e-08</code></pre>
-<p>We can see that intercept and attitude are statistically significant at confidennce 0.001 level. Estimate for attitude is 3.39, which means that change in unit in attitude changes points by 3.39. Other variables in this model are statistically insignificant. Adjusted R-squared is 0,19 which means that the model explains around 19 % of variation in exam points.</p>
+<p>We can see that intercept and attitude are statistically significant at 99,9% confidence level (1 - p-value). Estimate for attitude is 3.39, which means that change in unit in attitude changes points by 3.39. Other variables in this model are statistically insignificant. Adjusted R-squared is 0,19 which means that the model explains around 19 % of variation in exam points.</p>
 <p>We continue to remove strategic- and surface learning variables as they were statistically insignificant. New model is:</p>
 <pre class="r"><code>my_model2 &lt;- lm(Points ~ attitude, data = learning2014)
 summary(my_model2)</code></pre>
@@ -590,7 +590,7 @@ summary(my_model2)</code></pre>
 ## Residual standard error: 5.32 on 164 degrees of freedom
 ## Multiple R-squared:  0.1906, Adjusted R-squared:  0.1856 
 ## F-statistic: 38.61 on 1 and 164 DF,  p-value: 4.119e-09</code></pre>
-<p>Both the intercept and variable attitude are now statistically significant under 0,001 level. The estimate for attitude is slightly bigger in this second model (One unit change in attitude results to 3.52 change in exam points). Adjusted R-squared is now 0.1856 which means that the model explains around 18 % of the variation of points.</p>
+<p>Both the intercept and variable attitude are now statistically significant at 99.9 % confidence level (1 - p-value). The estimate for attitude is slightly bigger in this second model (One unit change in attitude results to 3.52 change in exam points). Adjusted R-squared is now 0.1856 which means that the model explains around 18 % of the variation of points.</p>
 <p>Finally we produce diagnostics plots for Residuals vs Fitted values, Normal QQ-plot and Residuals vs Leverage.</p>
 <pre class="r"><code>par(mfrow = c(2,2))
 

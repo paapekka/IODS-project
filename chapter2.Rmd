@@ -96,7 +96,7 @@ summary(my_model)
 
 ```
 
-We can see that intercept and attitude are statistically significant at confidennce 0.001 level.
+We can see that intercept and attitude are statistically significant at 99,9% confidence level (1 - p-value).
 Estimate for attitude is 3.39, which means that change in unit in attitude changes points by 3.39.
 Other variables in this model are statistically insignificant.
 Adjusted R-squared is 0,19 which means that the model explains around 19 % of variation in exam points.
@@ -112,7 +112,7 @@ summary(my_model2)
 
 ```
 
-Both the intercept and variable attitude are now statistically significant under 0,001 level.
+Both the intercept and variable attitude are now statistically significant at 99.9 % confidence level (1 - p-value).
 The estimate for attitude is slightly bigger in this second model (One unit change in attitude results to 3.52 change in exam points).
 Adjusted R-squared is now 0.1856 which means that the model explains around 18 % of the variation of points.
 
