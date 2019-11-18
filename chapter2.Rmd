@@ -13,7 +13,7 @@ lrn14 <- read.table("http://www.helsinki.fi/~kvehkala/JYTmooc/JYTOPKYS3-data.txt
 
 dim(lrn14)
 
-str(lrn14)
+colnames(lrn14)
 
 ```
 
