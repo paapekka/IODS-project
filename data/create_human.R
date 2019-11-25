@@ -26,3 +26,21 @@ gii <- mutate(gii, lfpr_ratio = lfpr_fem/lfpr_male)
 human <- inner_join(hd, gii, by = "country")
 
 View(human)
+write.csv(human, file = "human.csv", row.names = T)
+
+###Week 5
+
+str(human)
+human$gni <- str_replace(human$gni, pattern=",", replace ="") %>% as.numeric()
+human <- select(human, - hdi_rank, - mean_education,  - gni, -gii_rank,  - gii, -fem_sec_ed,  - male_sec_ed, -lfpr_fem, - lfpr_male)
+colnames(human)
+
+human$country
+
+
+last <- nrow(human) - 7
+human <- human[1:last, ]
+rownames(human) <- human$country
+human <- select(human, - country)
+
+write.csv(human, file = "human.csv", row.names = T)
