@@ -1,0 +1,173 @@
+# Week 4: Clustering and classification
+
+## Overview of the data and data wrangling
+
+We have 506 observations and 14 variables from Boston area
+
+Variables:
+
+rim - per capita crime rate by town.
+
+zn - proportion of residential land zoned for lots over 25,000 sq.ft.
+
+indus - proportion of non-retail business acres per town.
+
+chas-Charles River dummy variable (= 1 if tract bounds river; 0 otherwise).
+
+nox-nitrogen oxides concentration (parts per 10 million).
+
+rm-average number of rooms per dwelling.
+
+age-proportion of owner-occupied units built prior to 1940.
+
+dis-weighted mean of distances to five Boston employment centres.
+
+rad-index of accessibility to radial highways.
+
+tax-full-value property-tax rate per \$10,000.
+
+ptratio-pupil-teacher ratio by town.
+
+black-1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town.
+
+lstat-lower status of the population (percent).
+
+medv-median value of owner-occupied homes in \$1000s.
+
+First we access the packages and load the data
+
+```{r,error=FALSE, warning=FALSE, message=FALSE}
+library(MASS)
+library(tidyverse)
+library(corrplot)
+library(MASS)
+library(dplyr)
+library(ggplot2)
+library(GGally)
+data("Boston")
+
+```
+
+Exploring the stucture and summary of the dataset
+
+```{r,error=FALSE, warning=FALSE, message=FALSE}
+str(Boston)
+summary(Boston)
+
+```
+Plotting the matrix of the variables
+```{r,error=FALSE, warning=FALSE, message=FALSE}
+pairs(Boston[1:4])
+pairs(Boston[5:9])
+pairs(Boston[10:14])
+```
+
+We proceed to calculate the correlation matrix and round it up and then print it
+
+```{r,error=FALSE, warning=FALSE, message=FALSE}
+cor_matrix<-cor(Boston) %>% round(2)
+cor_matrix
+
+```
+
+Then we plot the correlation matrix
+
+```{r,error=FALSE, warning=FALSE, message=FALSE}
+corrplot(cor_matrix, method="circle" ,type = "upper",cl.pos="b", tl.pos = "d", tl.cex =0.6)
+```
+
+This is a bit more informative than the plots in the beginning.
+We can see that there is high correlations between for example "index of accessibility to radial highways" & "full-value property-tax rate per \$10,000" (0.91), "nitrogen oxides concentration" & "proportion of non-retail business acres per town" (-0.77), "proportion of owner-occupied units built prior to 1940" & "weighted mean of distances to five Boston employment centres" (-0.75).
+
+Next we standadize the dataset
+```{r,error=FALSE, warning=FALSE, message=FALSE}
+boston_scaled <- scale(Boston)
+summary(boston_scaled)
+```
+
+All variables have now zero as a mean value. 
+We proceed to wrangle the crime rate variable:
+
+```{r,error=FALSE, warning=FALSE, message=FALSE}
+boston_scaled <- as.data.frame(boston_scaled)
+summary(boston_scaled$crim)
+bins <- quantile(boston_scaled$crim)
+crime <- cut(boston_scaled$crim, breaks = bins, include.lowest = TRUE, labels = c("low", "med_low", "med_high", "high"))
+table(crime)
+boston_scaled <- dplyr::select(boston_scaled, -crim)
+boston_scaled <- data.frame(boston_scaled, crime)
+```
+
+Now we have a new categorical variable of the crime rate in the boston dataset.
+Old crime rate variable has also been dropped.
+The next step is to divide the dataset to train and test set:
+
+```{r,error=FALSE, warning=FALSE, message=FALSE}
+n <- nrow(boston_scaled)
+ind <- sample(n,  size = n * 0.8)
+train <- boston_scaled[ind,]
+test <- boston_scaled[-ind,]
+correct_classes <- test$crime
+test <- dplyr::select(test, -crime)
+```
+
+## Linear discriminant analysis
+
+Now that we have finished data wrangling, we can proceed to linear discriminant analysis on the train set.
+Categorical crime rate is target variable and other variables in the dataset are predictor variables.
+
+```{r,error=FALSE, warning=FALSE, message=FALSE}
+lda.fit <- lda(crime ~., data = train)
+
+lda.fit
+
+lda.arrows <- function(x, myscale = 1, arrow_heads = 0.1, color = "red", tex = 0.75, choices = c(1,2)){
+  heads <- coef(x)
+  arrows(x0 = 0, y0 = 0, 
+         x1 = myscale * heads[,choices[1]], 
+         y1 = myscale * heads[,choices[2]], col=color, length = arrow_heads)
+  text(myscale * heads[,choices], labels = row.names(heads), 
+       cex = tex, col=color, pos=3)
+}
+
+classes <- as.numeric(train$crime)
+
+plot(lda.fit, dimen = 2, col=classes, pch = classes)
+lda.arrows(lda.fit, myscale = 1)
+```
+In LD1 and LD2, variable "index of accessibility to radial highways" has the biggest separation weight related to other variables (LDI1 3.014 and LD2 0,892).
+
+Next we predict the classes with the LDA model on the test data and cross tabulate the results with the crime categories from the test set.
+Earlier we saved the crime categories from the test set and removed the categorical crime variable from the test dataset.
+
+```{r,error=FALSE, warning=FALSE, message=FALSE}
+lda.pred <- predict(lda.fit, newdata = test)
+table(correct = correct_classes, predicted = lda.pred$class)
+```
+
+Firstly model predicts very well high crime rate. The model predictor performs badly on the second lowest crime rate.
+
+## K-means algorithm
+
+Relading the Boston dataset and standardizing the dataset.
+We also calculate the distances between the observations and run k-means algorithm on the dataset.
+
+```{r,error=FALSE, warning=FALSE, message=FALSE}
+boston_scaled <- as.data.frame(boston_scaled)
+set.seed(123)
+k_max <- 10
+twcss <- sapply(1:k_max, function(k){kmeans(Boston, k)$tot.withinss})
+qplot(x = 1:k_max, y = twcss, geom = 'line')
+```
+
+We can see dramatic drop at the second value -> two clusters is the way to go.
+
+```{r,error=FALSE, warning=FALSE, message=FALSE}
+km <-kmeans(Boston, centers = 2)
+
+class(km$cluster)
+ggpairs(boston_scaled, mapping = aes(col = as.factor(km$cluster), alpha = 0.3), lower = "blank", upper = list(continuous = "points", combo =
+                                                                                                             "facethist", discrete = "facetbar", na = "na"))
+```
+
+In most cases two clusters divides the observations well enough.
