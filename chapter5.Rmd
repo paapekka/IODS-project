@@ -42,7 +42,7 @@ cor(human) %>% corrplot
 Many of the variables are not perfectly normally distributed and are skewed either to the right or left.
 There is some obvious (negative) correlations for example maternal mortality ratio and life expectancy.
 
-##Principal component analysis PCA  (Not standardized data & standardized data)
+## Principal component analysis PCA  (Not standardized data & standardized data)
 
 We proceed to PCA for the not standardized human data.
 
@@ -79,7 +79,7 @@ X-axis is representing PC1 and y-axis is representing  PC2.
 The direction and lenght of arrows represents how increase in each variable affects where the observation will be plotted.
 The points where countries are is the linear combination of the "arrows". We can see that the rich countries are on the left side and poorer on the right (PC1). The vertical axis tells about countries equality.
 
-##Tea time
+## Tea time
 
 For tea time we need to add factominer library. Let's read the data.
 
