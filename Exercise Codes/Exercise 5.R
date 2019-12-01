@@ -5,4 +5,93 @@ library(dplyr)
 library(corrplot)
 library(tidyr)
 
-data("")
+#First we read the data and take a look at the summary
+
+human <- read.csv("~/IODS-project/data/human.csv", sep  =",", header = T, row.names = 1)
+names(human)
+summary(human)
+
+#We have 155 observations and 8 variables from OECD's Human development report.
+#Link to  more information: http://hdr.undp.org/en/content/human-development-index-hdi 
+#Next we look graphically at the relations 
+
+my_fn <- function(data, mapping, ...){
+  p <- ggplot(data = data, mapping = mapping) + 
+    geom_point() + 
+    geom_smooth(method=loess, fill="red", color="red", ...) +
+    geom_smooth(method=lm, fill="blue", color="blue", ...)
+  p
+}
+ggpairs(human, lower = list(continuous = my_fn))
+
+
+cor(human) %>% corrplot
+
+#Many of the variables are not perfectly normally distributed and are skewed either to the right or left.
+#There is some obvious (negative) correlations for example maternal mortality ratio and life expectancy.
+
+##Principal component analysis PCA  (Not standardized data & standardized data)
+
+#we proceed to PCA for the not standardized human data.
+
+pca_human_not_std <- prcomp(human)
+sum_pca_human_not_std <- summary(pca_human_not_std)
+pca_pr_not_std <- round(100*sum_pca_human_not_std$importance[2, ], digits = 3)
+pca_pr_not_std
+pc_lab_not_std <- paste0(names(pca_pr_not_std), " (", pca_pr_not_std, "%)")
+biplot(pca_human_not_std, cex = c(0.8, 1), col = c("grey40", "deeppink2"), xlab = pc_lab_not_std[1], ylab = pc_lab_not_std[2])
+
+#There is two principal components catching any variance.
+#The first principal component catches 99.99% of the variance.
+
+#How do things change when we standardize?
+
+human_std <- scale(human)
+pca_human <- prcomp(human_std)
+sum_pca_human <- summary(pca_human)
+pca_pr <- round(100*sum_pca_human$importance[2, ], digits = 3)
+pca_pr
+
+
+pc_lab <- paste0(names(pca_pr), " (", pca_pr, "%)")
+
+biplot(pca_human, cex = c(0.8, 1), col = c("grey40", "deeppink2"), xlab = pc_lab[1], ylab = pc_lab[2])
+
+#We see that variance captured changes dramatically when the human data is standardized and for meaningful research it is necessary.
+#Now all eight principal components catch variance.First component catches only 53,6 % now.
+#X-axis is representing PC1 and y-axis is representing  PC2.
+#The direction and lenght of arrows represents how increase in each variable affects where the observation will be plotted.
+#The points where countries are is the linear combination of the "arrows". We can see that the rich countries are on the left side and poorer on the right (PC1). The vertical axis tells about countries equality.
+
+##Tea time
+
+#For tea time we need to add factominer library. Let's read the data.
+
+
+library(FactoMineR)
+tea <- read.table("http://factominer.free.fr/book/tea.csv",header=TRUE,sep=";")
+colnames(tea)
+str(tea)
+summary(tea)
+
+#We have 300 observations from 36 variables. Next we observe variables graphically.
+
+
+#Now we include only variables: "variety", "how", "format", "sugar", "place.of.purchase", "after.lunch" and visualize
+
+tea_time <- dplyr::select(tea, variety, how, format, sugar, place.of.purchase, after.lunch)
+
+gather(tea_time) %>% ggplot(aes(value)) + facet_wrap("key", scales = "free") + geom_bar() + theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8))
+
+#Next we do multiple correspondence analysis and visualize it.
+
+# multiple correspondence analysis
+mca <- MCA(tea_time, graph = FALSE)
+
+# summary of the model
+summary(mca)
+
+# visualize MCA
+plot(mca, invisible=c("ind"), habillage = "quali")
+
+#Dimensions 1 (15.24 %) and 2 (14.23 %) capture almost 30% of the variance.
