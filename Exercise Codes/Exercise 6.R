@@ -1,0 +1,150 @@
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(lme4)
+
+
+BPRS <- read.csv("https://raw.githubusercontent.com/KimmoVehkalahti/MABS/master/Examples/data/BPRS.txt", stringsAsFactors = F, sep = "", header = T)
+RATS <- read.csv("https://raw.githubusercontent.com/KimmoVehkalahti/MABS/master/Examples/data/rats.txt", stringsAsFactors = F, sep = "\t", header = T)
+BPRS$treatment <- as.factor(BPRS$treatment)
+BPRS$subject <- as.factor(BPRS$subject)
+RATS$ID <- as.factor(RATS$ID)
+RATS$Group <- as.factor(RATS$Group)
+BPRSL <-  BPRS %>% 
+  gather(key = weeks, value = bprs, -treatment, -subject) %>%
+  mutate(week = as.integer(substr(weeks, 5, 5)))
+RATSL <- RATS %>%
+  gather(key = WD, value = Weight, -ID, -Group) %>%
+  mutate(Time = as.integer(substr(WD, 3,4))) 
+
+## RATS case
+
+#We have the data set about rats and their weights in long form, let's plot it.
+
+ggplot(RATSL, aes(x = Time, y = Weight, group = ID, linetype = Group)) + geom_line() +scale_x_continuous(name = "Time (days)", breaks = seq(0, 60, 10)) + scale_y_continuous(name = "Weight (grams)") + theme(legend.position = "top")
+
+#It would seem that the rats are getting bigger as time goes by. There is also differences between groups. Let's make a regression model where weight is predicted by time and group.
+
+RATS_reg <- lm(Weight ~ Time + Group, data = RATSL)
+summary(RATS_reg)
+
+#All variables are statistically significant (and positive). However there is an issue. It is likely that the measurement is not independet of the previous measurement.
+#Therefore we add a random intercept which allows for each rat to differ in intercept from other rats.
+
+RATS_ref <- lmer(Weight ~ Time + Group + (1 | ID), data = RATSL, REML = FALSE)
+summary(RATS_ref)
+
+#We also need to take the slope to account. After these changes the model should take account the rats individual differences and the effect of time.
+
+RATS_ref1 <- lmer(Weight ~ Time + Group + (Time | ID), data = RATSL, REML = FALSE)
+anova(RATS_ref1, RATS_ref)
+
+#AIC, BIC and P-value tell us that the model which takes account individual differences and effect of time is better. Finally let's make a model with Group*Time interaction.
+
+RATS_ref2 <- lmer(Weight ~ Time * Group + (Time | ID), data = RATSL, REML = FALSE)
+anova(RATS_ref2, RATS_ref1)
+
+#Model with the group*time interaction is the best model so far.
+
+summary(RATS_ref2)
+
+#We can see the effects of each variable under the "Fixed effects" table.
+
+## BPRS case
+
+# Let's take a glimpse at the BPRSL data (we add week number as a variable)
+BPRSL <-  BPRSL %>% mutate(week = as.integer(substr(weeks,5,5)))
+
+glimpse(BPRSL)
+
+
+
+#We clearly have longitudal data
+
+# Next step is to plot the data
+
+ggplot(BPRSL, aes(x = week, y = bprs, linetype = subject)) +
+  geom_line() +
+  scale_linetype_manual(values = rep(1:10, times=4)) +
+  facet_grid(. ~ treatment, labeller = label_both) +
+  theme(legend.position = "none") + 
+  scale_y_continuous(limits = c(min(BPRSL$bprs), max(BPRSL$bprs)))
+
+# We standardize the data to see effects better
+
+BPRSL <- BPRSL %>%
+  group_by(week) %>%
+  mutate(stdbprs = (bprs - mean(bprs))/sd(bprs) ) %>%
+  ungroup()
+
+# Glimpse the data
+glimpse(BPRSL)
+
+# Plot again with the standardised bprs
+ggplot(BPRSL, aes(x = week, y = stdbprs, linetype = subject)) +
+  geom_line() +
+  scale_linetype_manual(values = rep(1:10, times=4)) +
+  facet_grid(. ~ treatment, labeller = label_both) +
+  scale_y_continuous(name = "standardized bprs")
+
+#It is still hard to see clearly the overall effects, we use standard error of mean
+
+# Number of weeks, baseline (week 0) included
+n <- BPRSL$week %>% unique() %>% length()
+
+# Summary data with mean and standard error of bprs by treatment and week 
+BPRSS <- BPRSL %>%
+  group_by(treatment, week) %>%
+  summarise( mean = mean(bprs), se = sd(bprs)/sqrt(n) ) %>%
+  ungroup()
+
+# Glimpse the data
+glimpse(BPRSS)
+
+
+# Plot the mean profiles
+ggplot(BPRSS, aes(x = week, y = mean, linetype = treatment, shape = treatment)) +
+  geom_line() +
+  scale_linetype_manual(values = c(1,2)) +
+  geom_point(size=3) +
+  scale_shape_manual(values = c(1,2)) +
+  geom_errorbar(aes(ymin=mean-se, ymax=mean+se, linetype="1"), width=0.3) +
+  theme(legend.position = c(0.8,0.8)) +
+  scale_y_continuous(name = "mean(bprs) +/- se(bprs)")
+
+#We can see that on average both treatments work. However treatment 1 seems to be working better from week 5 onwards. We have to analyse this statistically later.
+
+
+#Next we check if there is outliers in the data
+
+# Create a summary data by treatment and subject with mean as the summary variable (ignoring baseline week 0).
+BPRSL8S <- BPRSL %>%
+  filter(week > 0) %>%
+  group_by(treatment, subject) %>%
+  summarise( mean=mean(bprs) ) %>%
+  ungroup()
+
+# Glimpse the data
+glimpse(BPRSL8S)
+
+# Draw a boxplot of the mean versus treatment
+ggplot(BPRSL8S, aes(x = treatment, y = mean)) +
+  geom_boxplot() +
+  stat_summary(fun.y = "mean", geom = "point", shape=23, size=4, fill = "white") +
+  scale_y_continuous(name = "mean(bprs), weeks 1-8")
+
+#There is clearly an outlier in treatment 2, we take care of it.
+BPRSL8S1 <- filter(BPRSL8S, mean < 70)
+
+# Let's add a baseline from original data to represent time zero before treatment
+
+BPRSL8S2 <- BPRSL8S %>%
+  mutate(baseline = BPRS$week0)
+
+#And then make analysis if treatments have statistically different impact
+
+fit <- lm(mean ~ baseline + treatment, data = BPRSL8S2)
+summary(fit)
+anova(fit)
+
+#Treatments don't have any statistical difference as treatment2 variable is not statistically significant.
